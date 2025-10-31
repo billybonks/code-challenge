@@ -44,4 +44,15 @@ RSpec.describe("test suites") do
       expect(artwork).to(eq(expected_hash))
     end
   end
+
+  it "extracts books from 2025 page" do
+    expectation = load_json("./stubs/vangogh_books_2025/expected_array.json")
+    allow(Search).to(receive(:execute_query).and_return(load_file("./stubs/vangogh_books_2025/vangogh_books.html")))
+    result = Search.query("vangogh books")
+    result[:books].each_with_index do |artwork, index|
+      expected_hash = expectation["books"][index].transform_keys(&:to_sym)
+
+      expect(artwork).to(eq(expected_hash))
+    end
+  end
 end

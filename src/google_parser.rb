@@ -13,7 +13,7 @@ class GoogleParser
   def knowledge_card
     parsed_knowledge_card = {}
     knowledge_card_entries.each do |entry|
-      method_name = "kc_#{entry["data-attrid"].split("/").last.gsub(":", "_")}"
+      method_name = "kc_#{entry["data-attrid"].split("/").last.gsub(":", "_").split(" ")[0]}"
       parsed_entry = send(method_name, entry)
       parsed_knowledge_card[parsed_entry[0].to_sym] = parsed_entry[1] if parsed_entry
     rescue NoMethodError => error
@@ -24,6 +24,14 @@ class GoogleParser
       puts "KC Method #{method_name} not defined"
     end
     parsed_knowledge_card
+  end
+
+  def kc_author_books(knowledge_card_entry)
+    return if knowledge_card_entry["role"]
+
+    result = kc_person_movies(knowledge_card_entry)
+    result[0] = "books"
+    result
   end
 
   def kc_person_movies(knowledge_card_entry)
