@@ -26,6 +26,33 @@ class GoogleParser
     parsed_knowledge_card
   end
 
+  def kc_person_movies(knowledge_card_entry)
+    # movies/books return one kc entry per element
+    return if knowledge_card_entry["role"]
+
+    @person_movies ||= begin
+      artworks_links = knowledge_card_entry.css("a")
+      parsed_artworks = artworks_links.map do |artwork|
+        image = artwork.css("img").first
+        # how we extract the name has changed
+        details = artwork.css("wp-grid-tile div div")
+        name = details.first.text
+        # everything else stays the same
+        date = [artwork.text.gsub(name, "")][0]
+        result = {
+          link: "https://www.google.com" + artwork["href"],
+          name:,
+          image: images[image["id"]] || image["data-src"],
+        }
+        if date != ""
+          result[:extensions] = [date]
+        end
+        result
+      end
+      ["movies", parsed_artworks]
+    end
+  end
+
   def kc_visual_artist_works(knowledge_card_entry)
     @visual_artist_works ||= begin
       artworks_links = knowledge_card_entry.css("a")

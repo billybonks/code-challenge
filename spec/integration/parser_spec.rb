@@ -33,4 +33,15 @@ RSpec.describe("test suites") do
       expect(artwork).to(eq(expected_hash))
     end
   end
+
+  it "extracts movies from 2025 page" do
+    expectation = load_json("./stubs/the_rock_movies_2025/expected_array.json")
+    allow(Search).to(receive(:execute_query).and_return(load_file("./stubs/the_rock_movies_2025/the_rock_movies.html")))
+    result = Search.query("the rock movies")
+    result[:movies].each_with_index do |artwork, index|
+      expected_hash = expectation["movies"][index].transform_keys(&:to_sym)
+
+      expect(artwork).to(eq(expected_hash))
+    end
+  end
 end
