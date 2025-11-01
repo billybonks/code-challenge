@@ -61,6 +61,36 @@ class GoogleParser
     end
   end
 
+  def kc_artist_songs(knowledge_card_entry)
+    @artist_songs ||= begin
+      artworks_links = knowledge_card_entry.css("a")
+
+      parsed_artworks = artworks_links.map do |artwork|
+        image = artwork.css("img").first
+
+        details = artwork.xpath(".//text()")
+        name = details.shift.text
+        extensions = []
+        details.each do |text_node|
+          next if text_node.parent["aria-hidden"]
+
+          extensions << text_node.text
+        end
+
+        result = {
+          link: "https://www.google.com" + artwork["href"],
+          name:,
+          image: images[image&.[]("id")] || image&.[]("data-src"),
+        }
+        unless extensions.empty?
+          result[:extensions] = extensions
+        end
+        result
+      end
+      ["music", parsed_artworks]
+    end
+  end
+
   def kc_visual_artist_works(knowledge_card_entry)
     @visual_artist_works ||= begin
       artworks_links = knowledge_card_entry.css("a")

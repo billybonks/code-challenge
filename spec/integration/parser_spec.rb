@@ -55,4 +55,15 @@ RSpec.describe("test suites") do
       expect(artwork).to(eq(expected_hash))
     end
   end
+
+  it "extracts music from 2025 page" do
+    expectation = load_json("./stubs/pink_floyd_music_2025/expected_array.json")
+    allow(Search).to(receive(:execute_query).and_return(load_file("./stubs/pink_floyd_music_2025/pink_floyd_music.html")))
+    result = Search.query("pink floyd music")
+    result[:music].each_with_index do |artwork, index|
+      expected_hash = expectation["music"][index].transform_keys(&:to_sym)
+
+      expect(artwork).to(eq(expected_hash))
+    end
+  end
 end
