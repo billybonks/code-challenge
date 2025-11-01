@@ -27,88 +27,50 @@ class GoogleParser
   end
 
   def kc_author_books(knowledge_card_entry)
+    # books return one kc entry per element along side the top level element
     return if knowledge_card_entry["role"]
 
-    result = kc_person_movies(knowledge_card_entry)
-    result[0] = "books"
-    result
+    @person_movies ||= ["books", parse_carousel(knowledge_card_entry)]
   end
 
   def kc_person_movies(knowledge_card_entry)
-    # movies/books return one kc entry per element
+    # movies return one kc entry per element along side the top level element
     return if knowledge_card_entry["role"]
 
-    @person_movies ||= begin
-      artworks_links = knowledge_card_entry.css("a")
-      parsed_artworks = artworks_links.map do |artwork|
-        image = artwork.css("img").first
-        # how we extract the name has changed
-        details = artwork.css("wp-grid-tile div div")
-        name = details.first.text
-        # everything else stays the same
-        date = [artwork.text.gsub(name, "")][0]
-        result = {
-          link: "https://www.google.com" + artwork["href"],
-          name:,
-          image: images[image["id"]] || image["data-src"],
-        }
-        if date != ""
-          result[:extensions] = [date]
-        end
-        result
-      end
-      ["movies", parsed_artworks]
-    end
+    @person_movies ||= ["movies", parse_carousel(knowledge_card_entry)]
   end
 
   def kc_artist_songs(knowledge_card_entry)
-    @artist_songs ||= begin
-      artworks_links = knowledge_card_entry.css("a")
-
-      parsed_artworks = artworks_links.map do |artwork|
-        image = artwork.css("img").first
-
-        details = artwork.xpath(".//text()")
-        name = details.shift.text
-        extensions = []
-        details.each do |text_node|
-          next if text_node.parent["aria-hidden"]
-
-          extensions << text_node.text
-        end
-
-        result = {
-          link: "https://www.google.com" + artwork["href"],
-          name:,
-          image: images[image&.[]("id")] || image&.[]("data-src"),
-        }
-        unless extensions.empty?
-          result[:extensions] = extensions
-        end
-        result
-      end
-      ["music", parsed_artworks]
-    end
+    @artist_songs ||= ["music", parse_carousel(knowledge_card_entry)]
   end
 
   def kc_visual_artist_works(knowledge_card_entry)
-    @visual_artist_works ||= begin
-      artworks_links = knowledge_card_entry.css("a")
-      parsed_artworks = artworks_links.map do |artwork|
-        image = artwork.css("img").first
-        name = image["alt"]
-        date = [artwork.text.gsub(name, "")][0]
-        result = {
-          link: "https://www.google.com" + artwork["href"],
-          name:,
-          image: images[image["id"]] || image["data-src"],
-        }
-        if date != ""
-          result[:extensions] = [date]
-        end
-        result
+    @visual_artist_works ||= ["artworks", parse_carousel(knowledge_card_entry)]
+  end
+
+  def parse_carousel(knowledge_card_entry)
+    entries = knowledge_card_entry.css("a")
+    entries.map do |entry|
+      image = entry.css("img").first
+
+      details = entry.xpath(".//text()")
+      name = details.shift.text
+      extensions = []
+      details.each do |text_node|
+        next if text_node.parent["aria-hidden"]
+
+        extensions << text_node.text
       end
-      ["artworks", parsed_artworks]
+
+      result = {
+        link: "https://www.google.com" + entry["href"],
+        name:,
+        image: images[image&.[]("id")] || image&.[]("data-src"),
+      }
+      unless extensions.empty?
+        result[:extensions] = extensions
+      end
+      result
     end
   end
 
